@@ -5,40 +5,57 @@
 * Date Modified: February 23, 2019
 * Version 3
  */
-package gameoflifejoption;
+package bernardi;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
-public class GameOfLifeJOption {
+public class GameOfLife {
 
     public static void main(String[] args) {
+        // stores the number of pixels in each side of the square cell
+        // should not go under 5 -- 10 seems to be optimal
+        int pixelSizeCell = 10;
+        // stores the number of cells in each vertical and horizontal line
+        // they they are the same
+        // This should not go above 80 -- otherwise it will not fit vertically
+        // 80 seems to be optimal
+        int lengthGrid = 80;
+        // number of generations -- initalized to 1
+        int generationNum = 1;
+        // user input  -- sets the percentage or initial alive cells
+        float percentAlive;
+        // stores value for do-while loop - either 0 ot 1
+        int continueValue;
+
         // Will be the JFrame where each generation is painted on
         JFrame mainWindow = new JFrame("Game Of Life");
         // sets to exit on close of main game window
         mainWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         // mainWindow sets always on top;
         mainWindow.setAlwaysOnTop(true);
-        // HEAVILY OPTIMIZED -- DO NOT CHANGE UNLESS YOU HAVE GOOD REASON TO
-        mainWindow.setSize(615, 640);
+        
+        // HEAVILY OPTIMIZED -- DO NOT CHANGE UNLESS YOU HAVE GOOD REASON TO !
+        // the +15 and +40 were found through trial and error
+        // You should change the window size through altering the lengthGrid and
+        // pixelSizeCell variables ONLY,
+        mainWindow.setSize((pixelSizeCell * lengthGrid) + 15,(pixelSizeCell * lengthGrid) + 40);
+        
         // sets x,y coordinates of the main game window
-        mainWindow.setLocation(25, 150);
+        mainWindow.setLocation(0, 0);
         // creates JFrame object that all JOptionPane boxes are a subset of
         JFrame optionPane = new JFrame();
-        // sets x,y coordinates for optionPane jFrame object --DOESN'T SEEM TO WORK
-        optionPane.setLocation(600,175);
         // sets JFrame ofject and its children to alwasy be on top
         optionPane.setAlwaysOnTop(true);
         optionPane.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        // sets x,y coordinates for optionPane jFrame object
+        optionPane.setLocation(900,400);
+        // sets the optionPane JFrame to visible in order to assign properties 
+        // to its children the JOptionPane boxes
+        // ...at least, it works and that's my current hypothesis of how it works
+        optionPane.setVisible(true);
 
 
-
-        // number of generations -- initalized to 1
-        int generationNum = 1;
-        // user input  -- sets the percentage or initial alive cells
-        float percentAlive;
-        // stores value for while loop - either 0 ot 1
-        int continueValue;
         
         // shows welcome message
         JOptionPane.showMessageDialog(optionPane, 
@@ -61,14 +78,15 @@ public class GameOfLifeJOption {
         percentAlive = Float.parseFloat(percentAliveString);
         
 
-        // creates 1st originl grid with createGrid function and user inputted parameters.
+        // creates 1st generation grid with createGrid function and user inputted parameters.
         // stores this 1st grid as a varaible tempGrid
-        // harded coded for 30 colums and 30 rows
-        int tempGrid[][] = createGrid(60, percentAlive);
+        // lengthGrid is the number of cells in each horizontal and vertical row
+        // which are equal (it's a square)
+        int tempGrid[][] = createGrid(lengthGrid, percentAlive);
         
         //creates new object from DrawingPanel class(entends JFrame)
         // Ths constructor takes the already generated array 
-        DrawingPanel myPanel = new DrawingPanel(tempGrid);
+        DrawingPanel myPanel = new DrawingPanel(tempGrid,lengthGrid,pixelSizeCell);
         // adds myPanel to the JFrame mainWindow - this is the 1st generation
         mainWindow.add(myPanel);
         
@@ -91,16 +109,23 @@ public class GameOfLifeJOption {
                     3
             );
             
+            // breaks out immediately if user clicks no. Fixes problem of having
+            // 1 more generation than called for
+            if (continueValue == 1) {
+                break;
+            }
+            
             // updates generation Number
             generationNum ++;
             
             // updates tempGrid by passiing itself through the nextGeneration function 
+            // this creates the new generation based on the current generation
             tempGrid = nextGeneration(tempGrid);
 
             //removes current generation drawn in JFrame
             mainWindow.remove(myPanel);
             // creates new DrawingPanel object with new generation array
-            DrawingPanel myPanel2 = new DrawingPanel(tempGrid);
+            DrawingPanel myPanel2 = new DrawingPanel(tempGrid,lengthGrid,pixelSizeCell);
             //adds new drawn generation to JFrame
             mainWindow.add(myPanel2);
             //updates title
@@ -127,8 +152,12 @@ public class GameOfLifeJOption {
 
     }// end main
 
+    
+    // This function will take the current generation array and apply the rules 
+    // of the Game Of Life to it and create and return a new 2 dimensional array
+    // as the next generation
     static int[][] nextGeneration(int[][] nextGrid) {
-        // next generation grid that will be printed at end
+        // next generation grid that will be returned at end
         int future[][] = new int[nextGrid.length][nextGrid.length];
 
         // these 2 loops will examine each cell individually 
@@ -138,6 +167,8 @@ public class GameOfLifeJOption {
 
                 // if any cell on the edge is considered
                 if ((i == 0 || i == (nextGrid.length - 1)) || (j == 0 || j == (nextGrid.length - 1))) {
+                    // then that cell is set to DEAD. -- this creates a lifeless
+                    // barrier around the edge of the grid
                     future[i][j] = 0;
                 } // end if statement
                 else {
@@ -211,6 +242,10 @@ public class GameOfLifeJOption {
 
     } // ends printGrid free function */
 
+    // creates initial grid using the parameters sent to it
+    // these are the number of cells in each vertical and horizontal line
+    // and the proportion of cells alive 
+    // this creatues only the 1st generation array grid
     static int[][] createGrid(int sideLength, float percentAlive) {
         // creates new grid and allocates memory by setting size of grid 
         int grid[][] = new int[sideLength][sideLength];
